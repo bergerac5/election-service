@@ -5,15 +5,18 @@ import java.time.LocalDateTime;
 import com.online.voting.election.models.ElectionStatus;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public class CreateElectionRequest {
     @NotBlank(message = "Title is required")
     private String title;
-    @NotBlank(message = "Start date is required")
+    @NotNull(message = "Start date is required")
     private LocalDateTime startDate;
-    @NotBlank(message = "End date is required")
+
+    @NotNull(message = "End date is required")
     private LocalDateTime endDate;
-    @NotBlank(message = "Status is required")
+
+    @NotNull(message = "Status is required")
     private ElectionStatus status;
 
     public CreateElectionRequest() {

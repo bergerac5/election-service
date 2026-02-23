@@ -92,6 +92,11 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-stream-kafka</artifactId>
         </dependency>
+        <!-- OpenFeign for inter-service communication -->
+        <dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-openfeign</artifactId>
+</dependency>
 
 		<!-- ================= TEST ================= -->
         <dependency>

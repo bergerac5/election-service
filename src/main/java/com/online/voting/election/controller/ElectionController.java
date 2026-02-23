@@ -1,11 +1,11 @@
 package com.online.voting.election.controller;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -14,12 +14,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import com.online.voting.election.dtos.ApiResponse;
 import com.online.voting.election.dtos.CreateElectionRequest;
 import com.online.voting.election.dtos.ElectionResponse;
+import com.online.voting.election.dtos.MessageResponse;
 import com.online.voting.election.dtos.UpdateElectionRequest;
 import com.online.voting.election.dtos.UpdateElectionStatusRequest;
-import com.online.voting.election.models.Election;
 import com.online.voting.election.service.ElectionService;
 
 import jakarta.validation.Valid;
@@ -36,18 +38,19 @@ public class ElectionController {
 
     /* ================= CREATE ================= */
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<ElectionResponse> createElection(
+    public ResponseEntity<MessageResponse> createElection(
             @Valid @RequestBody CreateElectionRequest request) {
 
         try {
-            ElectionResponse response = electionService.createElection(request);
+            MessageResponse response = electionService.createElection(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
 
         } catch (IllegalArgumentException ex) {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ElectionResponse(ex.getMessage()));
+                    .body(new MessageResponse(ex.getMessage()));
         }
     }
 
@@ -55,13 +58,13 @@ public class ElectionController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{electionId}")
-    public ResponseEntity<ElectionResponse> updateElection(
+    public ResponseEntity<MessageResponse> updateElection(
             @PathVariable UUID electionId,
             @Valid @RequestBody UpdateElectionRequest request) {
 
         request.setElectionId(electionId);
 
-        ElectionResponse response = electionService.updateElection(request);
+        MessageResponse response = electionService.updateElection(request);
 
         return resolveResponse(response);
     }
@@ -70,46 +73,47 @@ public class ElectionController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{electionId}")
-    public ResponseEntity<ElectionResponse> deleteElection(
+    public ResponseEntity<MessageResponse> deleteElection(
             @PathVariable UUID electionId) {
 
-        ElectionResponse response = electionService.deleteElection(electionId);
+        MessageResponse response = electionService.deleteElection(electionId);
 
         return resolveResponse(response);
     }
 
-    /* ================= GET ================= */
+    /* ================= SEARCH BY NAME ================= */
 
     @GetMapping("/title/{title}")
-    public ResponseEntity<?> getElectionByTitle(@PathVariable String title) {
-        try {
-            Election election = electionService.getElectionByTitle(title);
-            return ResponseEntity.ok(election);
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(new ElectionResponse(ex.getMessage()));
-        }
+    public ResponseEntity<ElectionResponse> getElectionByTitle(
+            @PathVariable String title) {
+
+        ElectionResponse response = electionService.getElectionByTitle(title);
+        return ResponseEntity.ok(response);
     }
 
     /* ================= STATUS UPDATE ================= */
 
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{electionId}/status")
-    public ResponseEntity<ElectionResponse> updateElectionStatus(
+    public ResponseEntity<MessageResponse> updateElectionStatus(
             @PathVariable UUID electionId,
             @Valid @RequestBody UpdateElectionStatusRequest request) {
 
         request.setElectionId(electionId);
 
-        ElectionResponse response = electionService.updateElectionStatus(request);
+        MessageResponse response = electionService.updateElectionStatus(request);
 
         return resolveResponse(response);
     }
 
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<ElectionResponse>>> getAllElections() {
+        return ResponseEntity.ok(electionService.getAllElections());
+    }
+
     /* ================= RESPONSE RESOLVER ================= */
 
-    private ResponseEntity<ElectionResponse> resolveResponse(ElectionResponse response) {
+    private ResponseEntity<MessageResponse> resolveResponse(MessageResponse response) {
 
         String message = response.getMessage().toLowerCase();
 

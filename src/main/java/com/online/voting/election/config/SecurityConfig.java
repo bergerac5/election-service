@@ -25,11 +25,12 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         // public endpoints
-                        .requestMatchers("/actuator/**", "/elections/health").permitAll()
+                        .requestMatchers("/actuator/**", "/elections/health")
+                        .permitAll()
 
                         // ADMIN only
                         .requestMatchers(
-                                "/elections/**")
+                                "/elections/**", "/positions/**")
                         .hasRole("ADMIN")
 
                         // fallback
