@@ -33,6 +33,10 @@ public class SecurityConfig {
                                 "/elections/**", "/positions/**")
                         .hasRole("ADMIN")
 
+                        // VOTER and ADMIN
+                        .requestMatchers("/position-candidates/**")
+                        .hasAnyRole("VOTER", "ADMIN")
+
                         // fallback
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -20,4 +20,14 @@ public interface PositionCandidateRepository extends JpaRepository<PositionCandi
 
     @Query("SELECT pc FROM PositionCandidate pc WHERE pc.position.id = :positionId")
     List<PositionCandidate> findByPositionId(@Param("positionId") UUID positionId);
+
+    // New method to find all candidates for a given election
+    // @Query("SELECT pc FROM PositionCandidate pc WHERE pc.position.election.id =
+    // :electionId")
+    List<PositionCandidate> findByPosition_PositionId(UUID positionId);
+
+    // New method to find all candidates for a given election
+    // @Query("SELECT pc FROM PositionCandidate pc WHERE pc.position.election.id =
+    // :electionId")
+    List<PositionCandidate> findByPosition_Election_ElectionId(UUID electionId);
 }
