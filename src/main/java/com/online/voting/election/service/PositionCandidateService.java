@@ -12,6 +12,7 @@ import com.online.voting.election.clients.CandidateClient;
 import com.online.voting.election.dtos.ApiResponse;
 import com.online.voting.election.dtos.CandidateResponse;
 import com.online.voting.election.dtos.PositionCandidateDetailsResponse;
+import com.online.voting.election.handler.ResourceNotFoundException;
 import com.online.voting.election.models.Election;
 import com.online.voting.election.models.Position;
 import com.online.voting.election.models.PositionCandidate;
@@ -34,6 +35,10 @@ public class PositionCandidateService {
     public List<PositionCandidateDetailsResponse> getCandidatesByPosition(UUID positionId) {
 
         List<PositionCandidate> assignments = positionCandidateRepository.findByPosition_PositionId(positionId);
+
+        if (assignments.isEmpty()) {
+            throw new ResourceNotFoundException("Position not found with ID: " + positionId);
+        }
 
         if (assignments.isEmpty()) {
             return List.of();

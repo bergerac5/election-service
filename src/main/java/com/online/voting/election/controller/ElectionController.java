@@ -39,7 +39,7 @@ public class ElectionController {
     /* ================= CREATE ================= */
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping
+    @PostMapping("/createPosition")
     public ResponseEntity<MessageResponse> createElection(
             @Valid @RequestBody CreateElectionRequest request) {
 
@@ -57,14 +57,12 @@ public class ElectionController {
     /* ================= UPDATE ================= */
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{electionId}")
+    @PutMapping("/updateElection/{electionId}")
     public ResponseEntity<MessageResponse> updateElection(
             @PathVariable UUID electionId,
             @Valid @RequestBody UpdateElectionRequest request) {
 
-        request.setElectionId(electionId);
-
-        MessageResponse response = electionService.updateElection(request);
+        MessageResponse response = electionService.updateElection(electionId, request);
 
         return resolveResponse(response);
     }
@@ -72,7 +70,7 @@ public class ElectionController {
     /* ================= DELETE ================= */
 
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/{electionId}")
+    @DeleteMapping("/deleteElection/{electionId}")
     public ResponseEntity<MessageResponse> deleteElection(
             @PathVariable UUID electionId) {
 
@@ -106,9 +104,24 @@ public class ElectionController {
         return resolveResponse(response);
     }
 
-    @GetMapping
+    // Get all elections
+    @GetMapping("/allElections")
     public ResponseEntity<ApiResponse<List<ElectionResponse>>> getAllElections() {
         return ResponseEntity.ok(electionService.getAllElections());
+    }
+
+    // get election by id
+    @GetMapping("/{electionId}")
+    public ResponseEntity<ElectionResponse> getElectionById(@PathVariable UUID electionId) {
+        ElectionResponse response = electionService.getElectionById(electionId);
+        return ResponseEntity.ok(response);
+    }
+
+    // block endpoint to get multiple elections by their IDs
+    @PostMapping("/bulk")
+    public ApiResponse<List<ElectionResponse>> getElectionsByIds(@RequestBody List<UUID> ids) {
+        List<ElectionResponse> elections = electionService.getElectionsByIds(ids);
+        return new ApiResponse<>("Elections fetched successfully", elections);
     }
 
     /* ================= RESPONSE RESOLVER ================= */

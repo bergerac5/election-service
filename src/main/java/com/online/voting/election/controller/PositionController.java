@@ -1,5 +1,6 @@
 package com.online.voting.election.controller;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -41,7 +42,7 @@ public class PositionController {
 
         /* ================= CREATE ================= */
         @PreAuthorize("hasRole('ADMIN')")
-        @PostMapping
+        @PostMapping("/createPosition")
         public ResponseEntity<ApiResponse<PositionResponse>> createPosition(
                         @Valid @RequestBody PositionRequest request) {
 
@@ -52,7 +53,7 @@ public class PositionController {
 
         /* ================= UPDATE ================= */
         @PreAuthorize("hasRole('ADMIN')")
-        @PutMapping("/{positionId}")
+        @PutMapping("/updatePosition/{positionId}")
         public ResponseEntity<ApiResponse<PositionResponse>> updatePosition(
                         @PathVariable UUID positionId,
                         @Valid @RequestBody PositionRequest request) {
@@ -63,7 +64,7 @@ public class PositionController {
 
         /* ================= DELETE ================= */
         @PreAuthorize("hasRole('ADMIN')")
-        @DeleteMapping("/{positionId}")
+        @DeleteMapping("/deletePosition/{positionId}")
         public ResponseEntity<Void> deletePosition(@PathVariable UUID positionId) {
 
                 positionService.deletePosition(positionId);
@@ -122,7 +123,7 @@ public class PositionController {
 
         /* ================= ASSIGN POSITION TO CANDIDATE ================= */
         @PreAuthorize("hasRole('ADMIN')")
-        // post because is insert into conjuction table positioncandidate
+
         @PostMapping("/{electionId}/positions/{positionId}/assign-candidate/{candidateId}")
         public ResponseEntity<ApiResponse<AssignCandidateResponse>> assignCandidate(
                         @PathVariable UUID electionId,
@@ -134,6 +135,24 @@ public class PositionController {
 
                 return ResponseEntity.ok(
                                 new ApiResponse<>(response.getMessage(), response));
+        }
+
+        // ===== GET POSITION BY ID =====
+        @GetMapping("/{positionId}")
+        public ResponseEntity<ApiResponse<PositionResponse>> getPositionById(
+                        @PathVariable UUID positionId) {
+
+                PositionResponse response = positionService.getPositionById(positionId);
+
+                return ResponseEntity.ok(
+                                new ApiResponse<>("Position retrieved successfully", response));
+        }
+
+        // bulk endpoint to get multiple positions by their IDs
+        @PostMapping("/bulk")
+        public ApiResponse<List<PositionResponse>> getPositionsByIds(@RequestBody List<UUID> ids) {
+                List<PositionResponse> positions = positionService.getPositionsByIds(ids);
+                return new ApiResponse<>("Positions fetched successfully", positions);
         }
 
 }

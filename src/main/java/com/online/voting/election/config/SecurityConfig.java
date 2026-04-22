@@ -28,14 +28,24 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**", "/elections/health")
                         .permitAll()
 
-                        // ADMIN only
+                        // ADMIN only on position management endpoints
                         .requestMatchers(
-                                "/elections/**", "/positions/**")
+                                "positions/createPosition",
+                                "/updatePosition/{positionId}",
+                                "/deletePosition/{positionId}")
+                        .hasRole("ADMIN")
+
+                        // ADMIN only on election management endpoints
+                        .requestMatchers(
+                                "/elections/createPosition",
+                                "/updateElection/{electionId}",
+                                "/deleteElection/{electionId}",
+                                "/{electionId}/status")
                         .hasRole("ADMIN")
 
                         // VOTER and ADMIN
                         .requestMatchers("/position-candidates/**")
-                        .hasAnyRole("VOTER", "ADMIN")
+                        .hasAnyRole("VOTER", "ADMIN", "CANDIDATE")
 
                         // fallback
                         .anyRequest().authenticated())

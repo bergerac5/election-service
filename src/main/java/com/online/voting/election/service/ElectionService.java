@@ -52,16 +52,16 @@ public class ElectionService {
     }
 
     // UpdateElection Method
-    public MessageResponse updateElection(UpdateElectionRequest request) {
+    public MessageResponse updateElection(UUID electionId, UpdateElectionRequest request) {
 
         // find if election exists
-        if (!electionRepository.findByElectionId(request.getElectionId()).isPresent()) {
+        if (!electionRepository.findByElectionId(electionId).isPresent()) {
             return new MessageResponse("Election not found");
         }
         // find election by title and check if it exists and is not the same election
         // being updated
         if (electionRepository.existsByTitle(request.getTitle()) && !electionRepository
-                .findByElectionId(request.getElectionId()).get().getTitle().equals(request.getTitle())) {
+                .findByElectionId(electionId).get().getTitle().equals(request.getTitle())) {
             return new MessageResponse("Election with the same title already exists");
         }
 
@@ -71,7 +71,7 @@ public class ElectionService {
         }
 
         try {
-            Election existingElection = electionRepository.findByElectionId(request.getElectionId()).get();
+            Election existingElection = electionRepository.findByElectionId(electionId).get();
             existingElection.setTitle(request.getTitle());
             existingElection.setStartDate(request.getStartDate());
             existingElection.setEndDate(request.getEndDate());
@@ -146,6 +146,26 @@ public class ElectionService {
                 .toList();
 
         return new ApiResponse<>("Elections retrieved successfully", elections);
+    }
+
+    // get election by id
+    public ElectionResponse getElectionById(UUID electionId) {
+        Election election = electionRepository.findByElectionId(electionId)
+                .orElseThrow(() -> new IllegalArgumentException("Election not found with ID: " + electionId));
+
+        return mapToResponse(election);
+    }
+
+    // get multiple elections by their IDs (for Voting Service)
+    public List<ElectionResponse> getElectionsByIds(List<UUID> ids) {
+        if (ids == null || ids.isEmpty())
+            return List.of();
+
+        List<Election> elections = electionRepository.findAllById(ids);
+
+        return elections.stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
     // Helper method to map Election to ElectionResponse

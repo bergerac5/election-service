@@ -1,6 +1,7 @@
 package com.online.voting.election.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.kafka.common.errors.ResourceNotFoundException;
@@ -203,6 +204,27 @@ public class PositionService {
                                 candidate.getLastName(),
                                 assignment.getAssignedAt(),
                                 "Candidate successfully assigned");
+        }
+
+        // ================= GET POSITION BY ID =================
+        public PositionResponse getPositionById(UUID positionId) {
+                Position position = positionRepository.findById(positionId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Position not found with ID: " + positionId));
+
+                return mapToResponse(position);
+        }
+
+        // ====== GET MULTIPLE POSITIONS BY IDS (for Voting Service)======
+        public List<PositionResponse> getPositionsByIds(List<UUID> ids) {
+                if (ids == null || ids.isEmpty())
+                        return List.of();
+
+                List<Position> positions = positionRepository.findAllById(ids);
+
+                return positions.stream()
+                                .map(this::mapToResponse)
+                                .toList();
         }
 
         // ================= HELPERS =================
