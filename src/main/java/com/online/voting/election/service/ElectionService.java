@@ -12,6 +12,7 @@ import com.online.voting.election.dtos.ElectionResponse;
 import com.online.voting.election.dtos.MessageResponse;
 import com.online.voting.election.dtos.UpdateElectionRequest;
 import com.online.voting.election.dtos.UpdateElectionStatusRequest;
+import com.online.voting.election.handler.ElectionNotFoundException;
 import com.online.voting.election.models.Election;
 import com.online.voting.election.models.ElectionStatus;
 import com.online.voting.election.repository.ElectionRepository;
@@ -56,7 +57,7 @@ public class ElectionService {
 
         // find if election exists
         if (!electionRepository.findByElectionId(electionId).isPresent()) {
-            return new MessageResponse("Election not found");
+            throw new ElectionNotFoundException(String.format("Election with ID %s not found", electionId));
         }
         // find election by title and check if it exists and is not the same election
         // being updated
@@ -82,7 +83,8 @@ public class ElectionService {
 
             return new MessageResponse("Election updated successfully");
         } catch (Exception e) {
-            return new MessageResponse("Failed to update election: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to update election: ");
         }
     }
 
@@ -90,12 +92,13 @@ public class ElectionService {
     public MessageResponse deleteElection(UUID electionId) {
         try {
             if (!electionRepository.findByElectionId(electionId).isPresent()) {
-                return new MessageResponse("Election not found");
+                throw new ElectionNotFoundException(String.format("Election with ID %s not found", electionId));
             }
             electionRepository.deleteById(electionId);
             return new MessageResponse("Election deleted successfully");
         } catch (Exception e) {
-            return new MessageResponse("Failed to delete election: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to delete election: ");
         }
     }
 
@@ -115,7 +118,8 @@ public class ElectionService {
         try {
 
             Election election = electionRepository.findById(electionId)
-                    .orElseThrow(() -> new IllegalArgumentException("Election not found with ID: " + electionId));
+                    .orElseThrow(() -> new ElectionNotFoundException(
+                            String.format("Election with ID %s not found", electionId)));
 
             if (status == ElectionStatus.OPEN &&
                     LocalDateTime.now().isBefore(election.getStartDate())) {
@@ -133,7 +137,8 @@ public class ElectionService {
 
             return new MessageResponse("Election status updated successfully");
         } catch (Exception e) {
-            return new MessageResponse("Failed to update election status: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to update election status: ");
         }
     }
 
@@ -145,13 +150,14 @@ public class ElectionService {
                 .map(this::mapToResponse)
                 .toList();
 
-        return new ApiResponse<>("Elections retrieved successfully", elections);
+        return new ApiResponse<>(true, "Elections retrieved successfully", elections);
     }
 
     // get election by id
     public ElectionResponse getElectionById(UUID electionId) {
         Election election = electionRepository.findByElectionId(electionId)
-                .orElseThrow(() -> new IllegalArgumentException("Election not found with ID: " + electionId));
+                .orElseThrow(() -> new ElectionNotFoundException(
+                        String.format("Election with ID %s not found", electionId)));
 
         return mapToResponse(election);
     }
@@ -168,16 +174,31 @@ public class ElectionService {
                 .toList();
     }
 
+    private boolean isVotingAllowed(Election election) {
+
+        LocalDateTime now = LocalDateTime.now();
+
+        return (election.getStatus() == ElectionStatus.OPEN
+                || election.getStatus() == ElectionStatus.INPROGRESS)
+                && !now.isBefore(election.getStartDate())
+                && !now.isAfter(election.getEndDate());
+    }
+
     // Helper method to map Election to ElectionResponse
     private ElectionResponse mapToResponse(Election election) {
-        return new ElectionResponse(
-                election.getElectionId(),
-                election.getTitle(),
-                election.getStartDate(),
-                election.getEndDate(),
-                election.getStatus(),
-                election.getCreatedAt(),
-                election.getUpdatedAt());
+
+        ElectionResponse response = new ElectionResponse();
+
+        response.setElectionId(election.getElectionId());
+        response.setTitle(election.getTitle());
+        response.setStartDate(election.getStartDate());
+        response.setEndDate(election.getEndDate());
+        response.setStatus(election.getStatus());
+        response.setCanVote(isVotingAllowed(election));
+        response.setCreatedAt(election.getCreatedAt());
+        response.setUpdatedAt(election.getUpdatedAt());
+
+        return response;
     }
 
 }

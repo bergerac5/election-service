@@ -14,11 +14,11 @@ public class CandidateClientFallback implements CandidateClient {
 
     @Override
     public ApiResponse<CandidateResponse> verifyCandidateExists(UUID candidateId) {
-        return new ApiResponse<>( "Service unavailable", null);
+        return new ApiResponse<>(false, "Service unavailable", null);
     }
 
     @Override
     public ApiResponse<List<CandidateResponse>> getCandidatesByIds(List<UUID> ids) {
-        return new ApiResponse<>( "Service unavailable", Collections.emptyList());
+        return new ApiResponse<>(false, "Service unavailable", Collections.emptyList());
     }
 }

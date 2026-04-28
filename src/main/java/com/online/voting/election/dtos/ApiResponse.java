@@ -2,15 +2,33 @@ package com.online.voting.election.dtos;
 
 public class ApiResponse<T> {
 
+    private boolean success;
     private String message;
     private T data;
 
     public ApiResponse() {
     }
 
-    public ApiResponse(String message, T data) {
+    public ApiResponse(boolean success, String message, T data) {
+        this.success = success;
         this.message = message;
         this.data = data;
+    }
+
+    public static <T> ApiResponse<T> success(T data) {
+        return new ApiResponse<>(true, "Success", data);
+    }
+
+    public static <T> ApiResponse<T> failure(String message) {
+        return new ApiResponse<>(false, message, null);
+    }
+
+    public boolean isSuccess() {
+        return this.success;
+    }
+
+    public void setSuccess(boolean success) {
+        this.success = success;
     }
 
     public String getMessage() {

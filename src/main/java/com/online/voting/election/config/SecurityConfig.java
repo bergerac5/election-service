@@ -12,46 +12,49 @@ import com.online.voting.election.security.JwtFilter;
 @Configuration
 public class SecurityConfig {
 
-    private final JwtFilter jwtFilter;
+        private final JwtFilter jwtFilter;
 
-    public SecurityConfig(JwtFilter jwtFilter) {
-        this.jwtFilter = jwtFilter;
-    }
+        public SecurityConfig(JwtFilter jwtFilter) {
+                this.jwtFilter = jwtFilter;
+        }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        http
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        // public endpoints
-                        .requestMatchers("/actuator/**", "/elections/health")
-                        .permitAll()
+                http
+                                .csrf(csrf -> csrf.disable())
+                                .authorizeHttpRequests(auth -> auth
+                                                // public endpoints
+                                                .requestMatchers("/actuator/**", "/elections/health",
+                                                                "/elections/{electionId}", "/elections/bulk",
+                                                                "/positions/{positionId}", "/positions/bulk")
+                                                .permitAll()
 
-                        // ADMIN only on position management endpoints
-                        .requestMatchers(
-                                "positions/createPosition",
-                                "/updatePosition/{positionId}",
-                                "/deletePosition/{positionId}")
-                        .hasRole("ADMIN")
+                                                // ADMIN only on position management endpoints
+                                                .requestMatchers(
+                                                                "positions/createPosition",
+                                                                "/updatePosition/{positionId}",
+                                                                "/deletePosition/{positionId}")
+                                                .hasRole("ADMIN")
 
-                        // ADMIN only on election management endpoints
-                        .requestMatchers(
-                                "/elections/createPosition",
-                                "/updateElection/{electionId}",
-                                "/deleteElection/{electionId}",
-                                "/{electionId}/status")
-                        .hasRole("ADMIN")
+                                                // ADMIN only on election management endpoints
+                                                .requestMatchers(
+                                                                "/elections/createPosition",
+                                                                "/elections/updateElection/{electionId}",
+                                                                "/elections/deleteElection/{electionId}",
+                                                                "/elections/{electionId}/status")
+                                                .hasRole("ADMIN")
 
-                        // VOTER and ADMIN
-                        .requestMatchers("/position-candidates/**")
-                        .hasAnyRole("VOTER", "ADMIN", "CANDIDATE")
+                                                // VOTER and ADMIN
+                                                .requestMatchers("/position-candidates/**")
+                                                .hasAnyRole("VOTER", "ADMIN", "CANDIDATE")
 
-                        // fallback
-                        .anyRequest().authenticated())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                                                // fallback
+                                                .anyRequest().authenticated())
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+                return http.build();
+        }
 }

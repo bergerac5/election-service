@@ -19,35 +19,49 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleNotFound(ResourceNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ApiResponse<>(ex.getMessage(), null));
+                .body(new ApiResponse<>(false, ex.getMessage(), null));
     }
 
     // ✅ Handle domain AlreadyExistsException
     @ExceptionHandler(AlreadyExistsException.class)
     public ResponseEntity<ApiResponse<Object>> handleConflict(AlreadyExistsException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(new ApiResponse<>(ex.getMessage(), null));
+                .body(new ApiResponse<>(false, ex.getMessage(), null));
     }
 
     // ✅ Handle domain BadRequestException
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ApiResponse<Object>> handleBadRequest(BadRequestException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ApiResponse<>(ex.getMessage(), null));
+                .body(new ApiResponse<>(false, ex.getMessage(), null));
+    }
+
+    // ✅ Handle domain ElectionNotFoundException
+    @ExceptionHandler(ElectionNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleElectionNotFound(ElectionNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiResponse<>(false, ex.getMessage(), null));
+    }
+
+    // ✅ Handle domain PositionNotFoundException
+    @ExceptionHandler(PositionNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handlePositionNotFound(PositionNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiResponse<>(false, ex.getMessage(), null));
     }
 
     // ✅ Handle Feign 404 errors from Candidate Service
     @ExceptionHandler(FeignException.NotFound.class)
     public ResponseEntity<ApiResponse<Object>> handleFeignNotFound(FeignException.NotFound ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ApiResponse<>("Candidate not found", null));
+                .body(new ApiResponse<>(false, "Candidate not found", null));
     }
 
     // ✅ Handle DataIntegrityViolationException for duplicate candidate assignment
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<Object>> handleDuplicate(DataIntegrityViolationException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(new ApiResponse<>("Candidate already assigned to this position", null));
+                .body(new ApiResponse<>(false, "Candidate already assigned to this position", null));
     }
 
     // ✅ Handle Feign 403 errors from Candidate Service
@@ -57,7 +71,30 @@ public class GlobalExceptionHandler {
 
         ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(new ApiResponse<>("Access denied when verifying candidate", null));
+                .body(new ApiResponse<>(false, "Access denied when verifying candidate", null));
+    }
+
+    // ✅ Handle IllegalArgumentException for invalid input
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Object>> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse<>(false, ex.getMessage(), null));
+    }
+
+    // ✅ Handle all other Feign exceptions (e.g. service unavailable)
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<ApiResponse<Object>> handleFeignException(FeignException ex) {
+        ex.printStackTrace();
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(new ApiResponse<>(false, "Error communicating with external service", null));
+    }
+
+    // Voting not allowed (e.g. election not active)
+    @ExceptionHandler(VotingNotAllowedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleVotingNotAllowed(VotingNotAllowedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(new ApiResponse<>(false, ex.getMessage(), null));
     }
 
     // ✅ Catch all for other unhandled exceptions
@@ -65,6 +102,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleGeneral(Exception ex) {
         ex.printStackTrace(); // TEMP: see real cause in console
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ApiResponse<>("Oops! Something went wrong: " + ex, null));
+                .body(new ApiResponse<>(false, "Oops! Something went wrong: " + ex, null));
     }
 }

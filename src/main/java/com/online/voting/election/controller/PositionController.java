@@ -48,7 +48,7 @@ public class PositionController {
 
                 PositionResponse response = positionService.createPosition(request);
                 return ResponseEntity.status(HttpStatus.CREATED)
-                                .body(new ApiResponse<>("Position created successfully", response));
+                                .body(new ApiResponse<>(true, "Position created successfully", response));
         }
 
         /* ================= UPDATE ================= */
@@ -59,7 +59,7 @@ public class PositionController {
                         @Valid @RequestBody PositionRequest request) {
 
                 PositionResponse response = positionService.updatePosition(positionId, request);
-                return ResponseEntity.ok(new ApiResponse<>("Position updated successfully", response));
+                return ResponseEntity.ok(new ApiResponse<>(true, "Position updated successfully", response));
         }
 
         /* ================= DELETE ================= */
@@ -94,7 +94,7 @@ public class PositionController {
                 PageResponse<PositionResponse> response = PageResponse.from(positionsPage);
 
                 return ResponseEntity.ok(
-                                new ApiResponse<>("Positions retrieved successfully", response));
+                                new ApiResponse<>(true, "Positions retrieved successfully", response));
         }
 
         /* ================= GET POSITIONS BY ELECTION ================= */
@@ -118,12 +118,11 @@ public class PositionController {
                 PageResponse<PositionResponse> response = PageResponse.from(positionsPage);
 
                 return ResponseEntity.ok(
-                                new ApiResponse<>("Positions retrieved successfully", response));
+                                new ApiResponse<>(true, "Positions retrieved successfully", response));
         }
 
         /* ================= ASSIGN POSITION TO CANDIDATE ================= */
         @PreAuthorize("hasRole('ADMIN')")
-
         @PostMapping("/{electionId}/positions/{positionId}/assign-candidate/{candidateId}")
         public ResponseEntity<ApiResponse<AssignCandidateResponse>> assignCandidate(
                         @PathVariable UUID electionId,
@@ -134,7 +133,7 @@ public class PositionController {
                                 electionId, positionId, candidateId);
 
                 return ResponseEntity.ok(
-                                new ApiResponse<>(response.getMessage(), response));
+                                new ApiResponse<>(true, response.getMessage(), response));
         }
 
         // ===== GET POSITION BY ID =====
@@ -145,14 +144,14 @@ public class PositionController {
                 PositionResponse response = positionService.getPositionById(positionId);
 
                 return ResponseEntity.ok(
-                                new ApiResponse<>("Position retrieved successfully", response));
+                                new ApiResponse<>(true, "Position retrieved successfully", response));
         }
 
         // bulk endpoint to get multiple positions by their IDs
         @PostMapping("/bulk")
         public ApiResponse<List<PositionResponse>> getPositionsByIds(@RequestBody List<UUID> ids) {
                 List<PositionResponse> positions = positionService.getPositionsByIds(ids);
-                return new ApiResponse<>("Positions fetched successfully", positions);
+                return new ApiResponse<>(true, "Positions fetched successfully", positions);
         }
 
 }

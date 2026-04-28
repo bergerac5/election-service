@@ -112,16 +112,18 @@ public class ElectionController {
 
     // get election by id
     @GetMapping("/{electionId}")
-    public ResponseEntity<ElectionResponse> getElectionById(@PathVariable UUID electionId) {
+    public ResponseEntity<ApiResponse<ElectionResponse>> getElectionById(@PathVariable UUID electionId) {
+
         ElectionResponse response = electionService.getElectionById(electionId);
-        return ResponseEntity.ok(response);
+
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     // block endpoint to get multiple elections by their IDs
     @PostMapping("/bulk")
     public ApiResponse<List<ElectionResponse>> getElectionsByIds(@RequestBody List<UUID> ids) {
         List<ElectionResponse> elections = electionService.getElectionsByIds(ids);
-        return new ApiResponse<>("Elections fetched successfully", elections);
+        return new ApiResponse<>(true, "Elections fetched successfully", elections);
     }
 
     /* ================= RESPONSE RESOLVER ================= */

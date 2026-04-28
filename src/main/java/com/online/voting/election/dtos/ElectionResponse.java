@@ -12,23 +12,29 @@ public class ElectionResponse {
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private ElectionStatus status;
+    private boolean canVote;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     public ElectionResponse() {
     }
 
-    public ElectionResponse(UUID electionId, String title,
+    public ElectionResponse(
+            UUID electionId,
+            String title,
             LocalDateTime startDate,
             LocalDateTime endDate,
             ElectionStatus status,
+            boolean canVote,
             LocalDateTime createdAt,
             LocalDateTime updatedAt) {
+
         this.electionId = electionId;
         this.title = title;
         this.startDate = startDate;
         this.endDate = endDate;
         this.status = status;
+        this.canVote = canVote;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -54,11 +60,52 @@ public class ElectionResponse {
         return status;
     }
 
+    public boolean canVote() {
+        return canVote;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    // Setters
+    public void setElectionId(UUID electionId) {
+        this.electionId = electionId;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setStartDate(LocalDateTime startDate) {
+        this.startDate = startDate;
+    }
+
+    public void setEndDate(LocalDateTime endDate) {
+        this.endDate = endDate;
+    }
+
+    public void setStatus(ElectionStatus status) {
+        this.status = status;
+    }
+
+    public boolean isCanVote() {
+        return canVote;
+    }
+
+    public void setCanVote(boolean canVote) {
+        this.canVote = canVote;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }
