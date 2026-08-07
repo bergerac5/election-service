@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.online.voting.election.dtos.ApiResponse;
 import com.online.voting.election.dtos.CreateElectionRequest;
@@ -13,6 +14,7 @@ import com.online.voting.election.dtos.MessageResponse;
 import com.online.voting.election.dtos.UpdateElectionRequest;
 import com.online.voting.election.dtos.UpdateElectionStatusRequest;
 import com.online.voting.election.handler.ElectionNotFoundException;
+import com.online.voting.election.handler.InvalidElectionStatusTransitionException;
 import com.online.voting.election.models.Election;
 import com.online.voting.election.models.ElectionStatus;
 import com.online.voting.election.repository.ElectionRepository;
@@ -111,35 +113,28 @@ public class ElectionService {
     }
 
     // UpdateElectionStatus Method
-    public MessageResponse updateElectionStatus(UpdateElectionStatusRequest statusRequest) {
+    @Transactional
+    public ApiResponse<ElectionResponse> updateElectionStatus(UpdateElectionStatusRequest statusRequest) {
         UUID electionId = statusRequest.getElectionId();
         ElectionStatus status = statusRequest.getStatus();
 
-        try {
+        Election election = electionRepository.findById(electionId)
+                .orElseThrow(() -> new ElectionNotFoundException(
+                        String.format("Election with ID %s not found", electionId)));
 
-            Election election = electionRepository.findById(electionId)
-                    .orElseThrow(() -> new ElectionNotFoundException(
-                            String.format("Election with ID %s not found", electionId)));
-
-            if (status == ElectionStatus.OPEN &&
-                    LocalDateTime.now().isBefore(election.getStartDate())) {
-                return new MessageResponse("Election cannot open before start time");
-            }
-
-            if (status == ElectionStatus.CLOSED &&
-                    LocalDateTime.now().isBefore(election.getEndDate())) {
-                return new MessageResponse("Election cannot close before end time");
-            }
-            election.setStatus(status);
-            election.setUpdatedAt(LocalDateTime.now());
-
-            electionRepository.save(election);
-
-            return new MessageResponse("Election status updated successfully");
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Failed to update election status: ");
+        if (status == ElectionStatus.OPEN && LocalDateTime.now().isBefore(election.getStartDate())) {
+            throw new InvalidElectionStatusTransitionException("Election cannot open before start time");
         }
+
+        if (status == ElectionStatus.CLOSED && LocalDateTime.now().isBefore(election.getEndDate())) {
+            throw new InvalidElectionStatusTransitionException("Election cannot close before end time");
+        }
+
+        election.setStatus(status);
+        election.setUpdatedAt(LocalDateTime.now());
+        electionRepository.save(election);
+
+        return ApiResponse.success(mapToResponse(election));
     }
 
     // RetrieveAllElections Method
