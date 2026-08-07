@@ -19,9 +19,44 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+
+  cloud:
+    function:
+      definition: electionClosed
+
+    stream:
+      bindings:
+
+        # ================= OUTGOING EVENTS =================
+        electionClosed-out-0:
+          destination: election-closed
+          contentType: application/json
+
+      kafka:
+        binder:
+          brokers: localhost:9092
+          auto-create-topics: true
+          configuration:
+            spring.json.trusted.packages: com.online.voting.events
+
   main:
     allow-bean-definition-overriding: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+  health:
+    kafka:
+      enabled: true
+    db:
+      enabled: true
+
 logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.cloud.stream: DEBUG
+    org.springframework.integration: DEBUG

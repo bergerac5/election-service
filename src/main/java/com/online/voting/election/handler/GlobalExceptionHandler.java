@@ -2,6 +2,8 @@ package com.online.voting.election.handler;
 
 import org.apache.coyote.BadRequestException;
 import org.apache.kafka.common.errors.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,8 @@ import feign.FeignException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     // ✅ Handle domain ResourceNotFoundException
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -69,7 +73,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleFeignForbidden(
             FeignException.Forbidden ex) {
 
-        ex.printStackTrace();
+        log.error("Access denied when verifying candidate", ex);
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(new ApiResponse<>(false, "Access denied when verifying candidate", null));
     }
@@ -84,7 +88,7 @@ public class GlobalExceptionHandler {
     // ✅ Handle all other Feign exceptions (e.g. service unavailable)
     @ExceptionHandler(FeignException.class)
     public ResponseEntity<ApiResponse<Object>> handleFeignException(FeignException ex) {
-        ex.printStackTrace();
+        log.error("Unhandled exception", ex);
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
                 .body(new ApiResponse<>(false, "Error communicating with external service", null));
     }
@@ -97,10 +101,18 @@ public class GlobalExceptionHandler {
                 .body(new ApiResponse<>(false, ex.getMessage(), null));
     }
 
+    // Invalid election status transition
+    @ExceptionHandler(InvalidElectionStatusTransitionException.class)
+    public ResponseEntity<ApiResponse<Object>> handleInvalidElectionStatusTransition(
+            InvalidElectionStatusTransitionException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse<>(false, ex.getMessage(), null));
+    }
+
     // ✅ Catch all for other unhandled exceptions
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleGeneral(Exception ex) {
-        ex.printStackTrace(); // TEMP: see real cause in console
+        log.error("Unhandled exception", ex); // TEMP: see real cause in console
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ApiResponse<>(false, "Oops! Something went wrong: " + ex, null));
     }

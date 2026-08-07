@@ -7,9 +7,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.online.voting.election.models.Election;
 import com.online.voting.election.models.ElectionStatus;
+import com.online.voting.election.models.OutboxEvent;
 import com.online.voting.election.repository.ElectionRepository;
+import com.online.voting.election.repository.OutboxEventRepository;
+import com.online.voting.events.election.ElectionClosedEvent;
+
+import jakarta.transaction.Transactional;
 
 @Configuration
 public class SchedulingConfig {
@@ -18,12 +24,21 @@ public class SchedulingConfig {
     public class ElectionStatusScheduler {
 
         private final ElectionRepository electionRepository;
+        private final OutboxEventRepository outboxRepository;
+        private final ObjectMapper objectMapper;
 
-        public ElectionStatusScheduler(ElectionRepository electionRepository) {
+        public ElectionStatusScheduler(
+                ElectionRepository electionRepository,
+                OutboxEventRepository outboxRepository,
+                ObjectMapper objectMapper) {
+
             this.electionRepository = electionRepository;
+            this.outboxRepository = outboxRepository;
+            this.objectMapper = objectMapper;
         }
 
-        @Scheduled(fixedRate = 60000) // every 1 minute
+        @Scheduled(fixedRate = 60000)
+        @Transactional
         public void updateElectionStatus() {
 
             LocalDateTime now = LocalDateTime.now();
@@ -32,21 +47,52 @@ public class SchedulingConfig {
 
             for (Election e : elections) {
 
+                ElectionStatus newStatus;
+
                 if (now.isBefore(e.getStartDate())) {
-                    e.setStatus(ElectionStatus.OPEN);
+                    newStatus = ElectionStatus.OPEN;
+                } else if (now.isAfter(e.getEndDate())) {
+                    newStatus = ElectionStatus.CLOSED;
+                } else {
+                    newStatus = ElectionStatus.INPROGRESS;
                 }
 
-                if (now.isAfter(e.getEndDate())) {
-                    e.setStatus(ElectionStatus.CLOSED);
-                }
+                e.setStatus(newStatus);
 
-                if (!now.isBefore(e.getStartDate()) && !now.isAfter(e.getEndDate())) {
-                    e.setStatus(ElectionStatus.INPROGRESS);
+                if (newStatus == ElectionStatus.CLOSED
+                        && !e.isClosureEventSent()) {
+
+                    saveElectionClosedOutbox(e);
+
+                    e.setClosureEventSent(true);
                 }
             }
 
             electionRepository.saveAll(elections);
         }
-    }
 
+        private void saveElectionClosedOutbox(Election election) {
+
+            try {
+
+                ElectionClosedEvent event = new ElectionClosedEvent(election.getElectionId(),
+                        LocalDateTime.now());
+
+                // Convert event to JSON string
+                String payload = objectMapper.writeValueAsString(event);
+
+                OutboxEvent outbox = new OutboxEvent();
+
+                outbox.setAggregateType("Election");
+                outbox.setAggregateId(election.getElectionId());
+                outbox.setEventType("ElectionClosedEvent");
+                outbox.setPayload(payload);
+
+                outboxRepository.save(outbox);
+
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+    }
 }

@@ -41,17 +41,21 @@ public class Election {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(nullable = false)
+    private boolean closureEventSent = false;
+
     // Constructors
     public Election() {
     }
 
     public Election(UUID electionId, String title, LocalDateTime startDate, LocalDateTime endDate,
-            ElectionStatus status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+            ElectionStatus status, LocalDateTime createdAt, LocalDateTime updatedAt, boolean closureEventSent) {
         this.electionId = electionId;
         this.title = title;
         this.startDate = startDate;
         this.endDate = endDate;
         this.status = status;
+        this.closureEventSent = closureEventSent;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -95,6 +99,14 @@ public class Election {
 
     public void setStatus(ElectionStatus status) {
         this.status = status;
+    }
+
+    public boolean isClosureEventSent() {
+        return closureEventSent;
+    }
+
+    public void setClosureEventSent(boolean closureEventSent) {
+        this.closureEventSent = closureEventSent;
     }
 
     public LocalDateTime getCreatedAt() {

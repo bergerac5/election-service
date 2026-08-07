@@ -93,15 +93,12 @@ public class ElectionController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{electionId}/status")
-    public ResponseEntity<MessageResponse> updateElectionStatus(
+    public ResponseEntity<ApiResponse<ElectionResponse>> updateElectionStatus(
             @PathVariable UUID electionId,
             @Valid @RequestBody UpdateElectionStatusRequest request) {
 
         request.setElectionId(electionId);
-
-        MessageResponse response = electionService.updateElectionStatus(request);
-
-        return resolveResponse(response);
+        return ResponseEntity.ok(electionService.updateElectionStatus(request));
     }
 
     // Get all elections
