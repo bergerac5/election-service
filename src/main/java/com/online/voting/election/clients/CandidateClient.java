@@ -13,7 +13,7 @@ import com.online.voting.election.config.FeignConfig;
 import com.online.voting.election.dtos.ApiResponse;
 import com.online.voting.election.dtos.CandidateResponse;
 
-@FeignClient(name = "candidate-service", url = "http://localhost:8083", configuration = FeignConfig.class, fallback = CandidateClientFallback.class)
+@FeignClient(name = "api-gateway", url = "http://localhost:8080", configuration = FeignConfig.class, fallbackFactory = CandidateClientFallbackFactory.class)
 public interface CandidateClient {
 
     @GetMapping("/candidates/{candidateId}")
